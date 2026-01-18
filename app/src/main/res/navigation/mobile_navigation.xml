@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation"
+    app:startDestination="@id/navigation_home">
+
+    <fragment
+        android:id="@+id/navigation_home"
+        android:name="com.vorragun.yailek.ui.home.HomeFragment"
+        android:label="หน้าหลัก"
+        tools:layout="@layout/fragment_home">
+
+        <!-- 🔥 action จากหน้าหลัก → สรุปการขาย -->
+        <action
+            android:id="@+id/action_home_to_sales_summary"
+            app:destination="@id/navigation_sales_summary" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/navigation_sales_summary"
+        android:name="com.vorragun.yailek.ui.sales.SalesSummaryFragment"
+        android:label="สรุปการขาย"
+        tools:layout="@layout/fragment_sales_summary" />
+</navigation>

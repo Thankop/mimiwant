@@ -1,7 +1,24 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.Yailek" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your dark theme here. -->
-        <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
+    <!-- Base application theme for night mode. -->
+    <style name="Base.Theme.Yailek" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Primary brand color (for toolbar, etc.). -->
+        <item name="colorPrimary">@color/purple_500</item>
+        <item name="colorPrimaryVariant">@color/purple_700</item>
+        <item name="colorOnPrimary">@android:color/white</item>
+
+        <!-- Main background color of the app. -->
+        <item name="android:colorBackground">@color/dark_grey</item>
+
+        <!-- Color for surfaces like cards, bottom navigation. -->
+        <item name="colorSurface">@color/dark_grey</item>
+
+        <!-- Color for text and icons on top of surface/background colors. -->
+        <item name="colorOnSurface">@android:color/white</item>
+        <item name="colorOnBackground">@android:color/white</item>
+
+        <!-- Status bar color. -->
+        <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
     </style>
+
+    <style name="Theme.Yailek" parent="Base.Theme.Yailek" />
 </resources>
