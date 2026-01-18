@@ -37,6 +37,8 @@ class ProductDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAM
         private const val COLUMN_SALE_ITEM_PRODUCT_NAME = "product_name"
         private const val COLUMN_SALE_ITEM_QUANTITY = "quantity"
         private const val COLUMN_SALE_ITEM_PRICE = "price"
+
+        private const val COLUMN_SALE_ITEM_IMAGE ="image_res_id"
     }
 
     override fun onCreate(db: SQLiteDatabase?) {
@@ -185,9 +187,11 @@ class ProductDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAM
                         productName = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_SALE_ITEM_PRODUCT_NAME)),
                         quantity = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_SALE_ITEM_QUANTITY)),
                         price = cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_SALE_ITEM_PRICE)),
-                        imageResId = R.drawable.lay // ใส่รูป default ไปก่อน
+                        imageResId = cursor.getInt(
+                            cursor.getColumnIndexOrThrow(COLUMN_SALE_ITEM_IMAGE)
+                        )
                     )
-                )
+                    )
             }
         }
         return list
