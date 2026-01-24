@@ -19,21 +19,22 @@
             android:scaleType="centerCrop"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintEnd_toEndOf="parent"
+            tools:src="@drawable/lay" />
 
         <LinearLayout
             android:id="@+id/quantity_controls"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="8dp"
-            android:padding="4dp"
+            android:layout_marginEnd="12dp"
             android:elevation="4dp"
-            android:orientation="horizontal"
             android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="4dp"
             android:visibility="gone"
-            app:layout_constraintTop_toTopOf="@+id/productImageView"
-            app:layout_constraintEnd_toEndOf="@+id/productImageView"
+            app:layout_constraintBottom_toBottomOf="@id/productPriceTextView"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/productPriceTextView"
             tools:visibility="visible">
 
             <com.google.android.material.button.MaterialButton

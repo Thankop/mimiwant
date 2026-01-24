@@ -15,7 +15,7 @@ class ProductDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAM
 
     companion object {
         private const val DATABASE_NAME = "product.db"
-        private const val DATABASE_VERSION = 3
+        private const val DATABASE_VERSION = 4 // Incremented version
 
         private const val TABLE_PRODUCTS = "products"
         private const val COLUMN_ID = "id"
@@ -37,7 +37,6 @@ class ProductDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAM
         private const val COLUMN_SALE_ITEM_PRODUCT_NAME = "product_name"
         private const val COLUMN_SALE_ITEM_QUANTITY = "quantity"
         private const val COLUMN_SALE_ITEM_PRICE = "price"
-
         private const val COLUMN_SALE_ITEM_IMAGE ="image_res_id"
     }
 
@@ -54,7 +53,14 @@ class ProductDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAM
         val createSalesTable = "CREATE TABLE $TABLE_SALES ($COLUMN_SALE_ID INTEGER PRIMARY KEY AUTOINCREMENT, $COLUMN_SALE_DATE TEXT, $COLUMN_SALE_TOTAL_AMOUNT REAL, $COLUMN_SALE_ITEM_COUNT INTEGER)"
         db?.execSQL(createSalesTable)
 
-        val createSaleItemsTable = "CREATE TABLE $TABLE_SALE_ITEMS ($COLUMN_SALE_ITEM_ID INTEGER PRIMARY KEY AUTOINCREMENT, $COLUMN_SALE_ITEM_SALE_ID INTEGER, $COLUMN_SALE_ITEM_PRODUCT_NAME TEXT, $COLUMN_SALE_ITEM_QUANTITY INTEGER, $COLUMN_SALE_ITEM_PRICE REAL)"
+        // Added the image resource id column
+        val createSaleItemsTable = "CREATE TABLE $TABLE_SALE_ITEMS (" +
+                "$COLUMN_SALE_ITEM_ID INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "$COLUMN_SALE_ITEM_SALE_ID INTEGER, " +
+                "$COLUMN_SALE_ITEM_PRODUCT_NAME TEXT, " +
+                "$COLUMN_SALE_ITEM_QUANTITY INTEGER, " +
+                "$COLUMN_SALE_ITEM_PRICE REAL, " +
+                "$COLUMN_SALE_ITEM_IMAGE INTEGER)"
         db?.execSQL(createSaleItemsTable)
     }
 
@@ -115,6 +121,7 @@ class ProductDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAM
                     put(COLUMN_SALE_ITEM_PRODUCT_NAME, item.productName)
                     put(COLUMN_SALE_ITEM_QUANTITY, item.quantity)
                     put(COLUMN_SALE_ITEM_PRICE, item.price)
+                    put(COLUMN_SALE_ITEM_IMAGE, item.imageResId) // Added image res id
                 }
                 db.insert(TABLE_SALE_ITEMS, null, values)
             }

@@ -1,6 +1,7 @@
 package com.vorragun.yailek.ui.sales
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -19,6 +20,7 @@ class SaleDetailBottomSheet : BottomSheetDialogFragment() {
     private lateinit var viewModel: SalesViewModel
     private var saleId: Int = -1
     private var saleDate: String = ""
+    private lateinit var saleItemAdapter: SaleItemAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,24 +41,38 @@ class SaleDetailBottomSheet : BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Get the ViewModel scoped to the Activity
+        if (saleId == -1) {
+            Log.e(TAG, "Invalid saleId passed to SaleDetailBottomSheet. Dismissing.")
+            dismiss()
+            return
+        }
+
         val factory = SalesViewModelFactory(requireActivity().application)
         viewModel = ViewModelProvider(requireActivity(), factory).get(SalesViewModel::class.java)
 
-        // Setup RecyclerView
-        val saleItems = viewModel.getSaleItems(saleId)
-        val adapter = SaleItemAdapter(saleItems)
-        binding.saleItemsRecyclerView.layoutManager = LinearLayoutManager(context)
-        binding.saleItemsRecyclerView.adapter = adapter
+        setupRecyclerView()
 
-        // When delete is clicked, send a result back to the parent fragment
+        viewModel.saleItems.observe(viewLifecycleOwner) { items ->
+            saleItemAdapter.updateData(items)
+        }
+
+        viewModel.loadSaleItems(saleId)
+
         binding.btnDeleteSale.setOnClickListener {
             val resultBundle = bundleOf(
                 ARG_SALE_ID to saleId,
                 ARG_SALE_DATE to saleDate
             )
             setFragmentResult(DELETE_REQUEST_KEY, resultBundle)
-            dismiss() // Close the bottom sheet
+            dismiss()
+        }
+    }
+
+    private fun setupRecyclerView() {
+        saleItemAdapter = SaleItemAdapter(emptyList())
+        binding.saleItemsRecyclerView.apply {
+            layoutManager = LinearLayoutManager(context)
+            adapter = saleItemAdapter
         }
     }
 

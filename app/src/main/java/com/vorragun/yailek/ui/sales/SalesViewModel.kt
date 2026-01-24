@@ -4,7 +4,10 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
 import com.vorragun.productmanagement.ProductDbHelper
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -21,6 +24,9 @@ class SalesViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _selectedDate = MutableLiveData<String>()
     val selectedDate: LiveData<String> = _selectedDate
+
+    private val _saleItems = MutableLiveData<List<SaleItem>>()
+    val saleItems: LiveData<List<SaleItem>> = _saleItems
 
     private var lastSavedToken: String? = null
 
@@ -67,8 +73,16 @@ class SalesViewModel(application: Application) : AndroidViewModel(application) {
         loadSalesForDate(dateToSave)
     }
 
+    // Old synchronous method - should not be used from UI thread
     fun getSaleItems(saleId: Int): List<SaleItem> {
         return dbHelper.getSaleItems(saleId)
+    }
+
+    fun loadSaleItems(saleId: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val items = dbHelper.getSaleItems(saleId)
+            _saleItems.postValue(items)
+        }
     }
 
     fun deleteSale(saleId: Int, saleDate: String) {

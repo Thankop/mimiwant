@@ -3,6 +3,7 @@ package com.vorragun.productmanagement
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
@@ -33,6 +34,7 @@ class ProductAdapter(private var productList: List<Product>) : RecyclerView.Adap
 
         holder.productNameTextView.text = currentItem.name
         holder.productPriceTextView.text = "฿%.2f".format(currentItem.price)
+        holder.productImageView.setImageResource(currentItem.imageResId)
 
         if (isInSelectionMode) {
             holder.quantityControls.visibility = View.VISIBLE
@@ -70,6 +72,7 @@ class ProductAdapter(private var productList: List<Product>) : RecyclerView.Adap
     class ProductViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val productNameTextView: TextView = itemView.findViewById(R.id.productNameTextView)
         val productPriceTextView: TextView = itemView.findViewById(R.id.productPriceTextView)
+        val productImageView: ImageView = itemView.findViewById(R.id.productImageView)
 
         val quantityControls: LinearLayout = itemView.findViewById(R.id.quantity_controls)
         val buttonMinus: MaterialButton = itemView.findViewById(R.id.button_minus)
