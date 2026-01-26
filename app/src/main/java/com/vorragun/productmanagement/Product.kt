@@ -8,5 +8,6 @@ data class Product(
     val description: String,
     val price: Double,
     val quantity: Int,
-    @DrawableRes val imageResId: Int // Changed from imagePath: String
+    @DrawableRes val imageResId: Int,
+    val category: String
 )

@@ -73,8 +73,7 @@ class SalesSummaryFragment : Fragment() {
         }
 
         viewModel.selectedDate.observe(viewLifecycleOwner) { date ->
-            val today = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date())
-            binding.btnSelectDate.text = if (date == today) "วันนี้" else date
+            binding.btnSelectDate.text = "วันที่: $date"
         }
     }
 

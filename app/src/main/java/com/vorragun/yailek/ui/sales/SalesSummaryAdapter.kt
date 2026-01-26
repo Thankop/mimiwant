@@ -14,7 +14,7 @@ class SalesSummaryAdapter(
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val billNumberTextView: TextView = view.findViewById(R.id.item_id)
-        val dateTextView: TextView = view.findViewById(R.id.item_date)
+        val timeTextView: TextView = view.findViewById(R.id.item_time)
         val amountTextView: TextView = view.findViewById(R.id.item_amount)
         val countTextView: TextView = view.findViewById(R.id.item_count)
     }
@@ -29,9 +29,9 @@ class SalesSummaryAdapter(
         val record = salesRecords[position]
 
         // ⭐ ใช้เลขบิลรายวัน ไม่ใช่ id
-        holder.billNumberTextView.text = "${record.dailyNumber}"
+        holder.billNumberTextView.text = "#${record.dailyNumber}"
 
-        holder.dateTextView.text = record.date
+        holder.timeTextView.text = record.time
         holder.amountTextView.text = String.format("%.2f", record.totalAmount)
         holder.countTextView.text = "${record.itemCount} ชิ้น"
 

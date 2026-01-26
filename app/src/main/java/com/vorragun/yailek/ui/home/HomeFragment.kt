@@ -9,6 +9,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
+import com.google.android.material.chip.Chip
 import com.vorragun.productmanagement.Product
 import com.vorragun.productmanagement.ProductAdapter
 import com.vorragun.productmanagement.ProductDbHelper
@@ -26,6 +27,7 @@ class HomeFragment : Fragment() {
     private val binding get() = _binding!!
 
     private lateinit var productAdapter: ProductAdapter
+    private lateinit var dbHelper: ProductDbHelper
     private var allProducts = listOf<Product>()
 
     private lateinit var salesViewModel: SalesViewModel
@@ -41,7 +43,7 @@ class HomeFragment : Fragment() {
         val factory = SalesViewModelFactory(requireActivity().application)
         salesViewModel = ViewModelProvider(requireActivity(), factory).get(SalesViewModel::class.java)
 
-        val dbHelper = ProductDbHelper(requireContext())
+        dbHelper = ProductDbHelper(requireContext())
         if (dbHelper.getAllProducts().isEmpty()) {
             addSampleProducts(dbHelper)
         }
@@ -50,6 +52,8 @@ class HomeFragment : Fragment() {
         productAdapter = ProductAdapter(allProducts)
         binding.productsRecyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
         binding.productsRecyclerView.adapter = productAdapter
+
+        setupCategoryChips()
 
         binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?) = false
@@ -68,6 +72,26 @@ class HomeFragment : Fragment() {
         }
 
         return binding.root
+    }
+
+    private fun setupCategoryChips() {
+        binding.categoryChipGroup.setOnCheckedChangeListener { group, checkedId ->
+            val selectedCategory = when (checkedId) {
+                R.id.chip_drinks -> "เครื่องดื่ม"
+                R.id.chip_snacks -> "ขนม"
+                else -> null // For "All"
+            }
+            loadProducts(selectedCategory)
+        }
+    }
+
+    private fun loadProducts(category: String?) {
+        allProducts = if (category == null) {
+            dbHelper.getAllProducts()
+        } else {
+            dbHelper.getProductsByCategory(category)
+        }
+        productAdapter.updateProducts(allProducts)
     }
 
     private fun enterSelectionMode() {
@@ -122,42 +146,22 @@ class HomeFragment : Fragment() {
     }
 
     private fun addSampleProducts(dbHelper: ProductDbHelper) {
-        val titles = listOf(
-            "เลย์", "น้ำเปล่า", "โอริโอ", "โออิชิ",
-            "เอลเซ", "ลีโอ", "เบียร์", "น้ำแข็ง",
-            "จูปาจุป", "โชกี้", "คอนเน่", "มาชิตะ"
+        val products = listOf(
+            Product(0, "เลย์", "", 5.0, 0, R.drawable.lay, "ขนม"),
+            Product(0, "น้ำเปล่า", "", 10.0, 0, R.drawable.water, "เครื่องดื่ม"),
+            Product(0, "โอริโอ", "", 10.0, 0, R.drawable.oreo, "ขนม"),
+            Product(0, "โออิชิ", "", 20.0, 0, R.drawable.oshi, "เครื่องดื่ม"),
+            Product(0, "เอลเซ", "", 10.0, 0, R.drawable.ellse, "ขนม"),
+            Product(0, "ลีโอ", "", 62.0, 0, R.drawable.leo, "เครื่องดื่ม"),
+            Product(0, "เบียร์", "", 65.0, 0, R.drawable.singhabeer, "เครื่องดื่ม"),
+            Product(0, "น้ำแข็ง", "", 10.0, 0, R.drawable.ice, "เครื่องดื่ม"),
+            Product(0, "จูปาจุป", "", 2.0, 0, R.drawable.chupachups, "ขนม"),
+            Product(0, "โชกี้", "", 2.0, 0, R.drawable.choki, "ขนม"),
+            Product(0, "คอนเน่", "", 10.0, 0, R.drawable.conne, "ขนม"),
+            Product(0, "มาชิตะ", "", 5.0, 0, R.drawable.mashita, "ขนม")
         )
 
-        val prices = listOf(
-            5.0, 10.0, 10.0, 20.0,
-            10.0, 62.0, 65.0, 10.0,
-            2.0, 2.0, 10.0, 5.0
-        )
-
-        val images = listOf(
-            R.drawable.lay,
-            R.drawable.water,
-            R.drawable.oreo,
-            R.drawable.oshi,
-            R.drawable.ellse,
-            R.drawable.leo,
-            R.drawable.singhabeer,
-            R.drawable.ice,
-            R.drawable.chupachups,
-            R.drawable.choki,
-            R.drawable.conne,
-            R.drawable.mashita
-        )
-
-        for (i in titles.indices) {
-            val product = Product(
-                id = 0,
-                name = titles[i],
-                description = "",
-                price = prices[i],
-                quantity = 0,
-                imageResId = images[i]
-            )
+        for (product in products) {
             dbHelper.addProduct(product)
         }
     }

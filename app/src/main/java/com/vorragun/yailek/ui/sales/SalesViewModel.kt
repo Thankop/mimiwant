@@ -61,6 +61,7 @@ class SalesViewModel(application: Application) : AndroidViewModel(application) {
         val record = SalesRecord(
             id = 0,
             date = dateToSave,
+            time = "", // Pass empty time, DB will generate it.
             totalAmount = totalAmount,
             itemCount = totalItems,
             dailyNumber = 0

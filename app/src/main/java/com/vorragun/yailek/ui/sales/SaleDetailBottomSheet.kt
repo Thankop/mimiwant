@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.vorragun.yailek.databinding.BottomSheetSaleDetailBinding
 
-class SaleDetailBottomSheet : BottomSheetDialogFragment() {
+class  SaleDetailBottomSheet : BottomSheetDialogFragment() {
 
     private var _binding: BottomSheetSaleDetailBinding? = null
     private val binding get() = _binding!!
