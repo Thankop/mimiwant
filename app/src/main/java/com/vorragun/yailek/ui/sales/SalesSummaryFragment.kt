@@ -23,7 +23,6 @@ class SalesSummaryFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Listen for the delete request from the bottom sheet
         parentFragmentManager.setFragmentResultListener(SaleDetailBottomSheet.DELETE_REQUEST_KEY, this) { _, bundle ->
             val saleId = bundle.getInt("sale_id")
             val saleDate = bundle.getString("sale_date", "")
@@ -48,8 +47,8 @@ class SalesSummaryFragment : Fragment() {
         viewModel = ViewModelProvider(requireActivity(), factory).get(SalesViewModel::class.java)
 
         setupRecyclerView()
-        setupObservers()
         setupUI()
+        setupObservers()
     }
 
     private fun setupRecyclerView() {
@@ -63,9 +62,19 @@ class SalesSummaryFragment : Fragment() {
         }
     }
 
+    private fun setupUI() {
+        binding.btnSelectDate.setOnClickListener {
+            showDatePicker()
+        }
+
+        binding.chipFilterPending.setOnCheckedChangeListener { _, isChecked ->
+            viewModel.setFilterPendingOnly(isChecked)
+        }
+    }
+
     private fun setupObservers() {
-        viewModel.salesRecords.observe(viewLifecycleOwner) {
-            summaryAdapter.updateData(it)
+        viewModel.salesRecords.observe(viewLifecycleOwner) { records ->
+            summaryAdapter.updateData(records)
         }
 
         viewModel.dailyTotal.observe(viewLifecycleOwner) { total ->
@@ -75,11 +84,9 @@ class SalesSummaryFragment : Fragment() {
         viewModel.selectedDate.observe(viewLifecycleOwner) { date ->
             binding.btnSelectDate.text = "วันที่: $date"
         }
-    }
 
-    private fun setupUI() {
-        binding.btnSelectDate.setOnClickListener {
-            showDatePicker()
+        viewModel.isFilterPendingOnly.observe(viewLifecycleOwner) { isFiltered ->
+            binding.chipFilterPending.isChecked = isFiltered
         }
     }
 

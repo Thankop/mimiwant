@@ -16,8 +16,12 @@ class SalesViewModel(application: Application) : AndroidViewModel(application) {
 
     private val dbHelper = ProductDbHelper(application)
 
+    // Holds the currently displayed records (can be filtered or unfiltered)
     private val _salesRecords = MutableLiveData<List<SalesRecord>>()
     val salesRecords: LiveData<List<SalesRecord>> = _salesRecords
+
+    // Holds ALL sales records for the selected date, unfiltered.
+    private var _allSalesForDay = listOf<SalesRecord>()
 
     private val _dailyTotal = MutableLiveData<Double>()
     val dailyTotal: LiveData<Double> = _dailyTotal
@@ -31,6 +35,9 @@ class SalesViewModel(application: Application) : AndroidViewModel(application) {
     private val _pendingSaleData = MutableLiveData<Pair<SalesRecord, List<SaleItem>>?>()
     val pendingSaleData: LiveData<Pair<SalesRecord, List<SaleItem>>?> = _pendingSaleData
 
+    private val _isFilterPendingOnly = MutableLiveData(false)
+    val isFilterPendingOnly: LiveData<Boolean> = _isFilterPendingOnly
+
     private var lastSavedToken: String? = null
 
     init {
@@ -39,21 +46,39 @@ class SalesViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun loadSalesForDate(date: String) {
-        _selectedDate.postValue(date)   // ✅ ปลอดภัยทุก thread
-        lastSavedToken = null
+        _selectedDate.postValue(date)
 
         viewModelScope.launch(Dispatchers.IO) {
-            val records = dbHelper.getSalesForDate(date)
+            // THE FIX IS HERE:
+            // Step 1: Fetch all records and store in the master list.
+            _allSalesForDay = dbHelper.getSalesForDate(date)
 
-            val totalPaid = records
+            // Step 2: Calculate total based on the complete, unfiltered list.
+            val totalPaid = _allSalesForDay
                 .filter { it.paymentStatus == "PAID" }
                 .sumOf { it.totalAmount }
-
-            _salesRecords.postValue(records)
             _dailyTotal.postValue(totalPaid)
+
+            // Step 3: Apply the current filter and post the visible list to the UI.
+            applyFilter()
         }
     }
 
+    fun setFilterPendingOnly(isFiltered: Boolean) {
+        if (_isFilterPendingOnly.value != isFiltered) {
+            _isFilterPendingOnly.value = isFiltered
+            applyFilter()
+        }
+    }
+
+    private fun applyFilter() {
+        val filteredList = if (_isFilterPendingOnly.value == true) {
+            _allSalesForDay.filter { it.paymentStatus == "PENDING" }
+        } else {
+            _allSalesForDay
+        }
+        _salesRecords.postValue(filteredList)
+    }
 
     fun saveSaleIfNeeded(
         saleToken: String,
@@ -65,12 +90,8 @@ class SalesViewModel(application: Application) : AndroidViewModel(application) {
         val date = _selectedDate.value ?: return
 
         val record = SalesRecord(
-            id = 0,
-            date = date,
-            time = "",
-            totalAmount = totalAmount,
-            itemCount = totalItems,
-            dailyNumber = 0,
+            id = 0, date = date, time = "",
+            totalAmount = totalAmount, itemCount = totalItems, dailyNumber = 0,
             paymentStatus = ""
         )
 
@@ -86,6 +107,7 @@ class SalesViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch(Dispatchers.IO) {
             val saleId = dbHelper.addSaleRecordAndReturnId(record)
             dbHelper.addSaleItems(saleId, items)
+            // Reload all data for the date to reflect the new sale
             loadSalesForDate(record.date)
         }
 
@@ -111,7 +133,10 @@ class SalesViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun deleteSale(saleId: Int, saleDate: String) {
-        dbHelper.deleteSale(saleId)
-        loadSalesForDate(saleDate)
+        // Launch as a coroutine for consistency
+        viewModelScope.launch(Dispatchers.IO) {
+            dbHelper.deleteSale(saleId)
+            loadSalesForDate(saleDate)
+        }
     }
 }
