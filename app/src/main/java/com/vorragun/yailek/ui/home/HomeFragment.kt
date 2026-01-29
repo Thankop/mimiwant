@@ -1,9 +1,13 @@
 package com.vorragun.yailek.ui.home
 
+import android.app.AlertDialog
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.RadioButton
+import android.widget.RadioGroup
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -54,6 +58,7 @@ class HomeFragment : Fragment() {
         binding.productsRecyclerView.adapter = productAdapter
 
         setupCategoryChips()
+        setupObservers()
 
         binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?) = false
@@ -72,6 +77,50 @@ class HomeFragment : Fragment() {
         }
 
         return binding.root
+    }
+
+    private fun setupObservers() {
+        salesViewModel.pendingSaleData.observe(viewLifecycleOwner) { pendingData ->
+            pendingData?.let {
+                showPaymentStatusDialog()
+            }
+        }
+    }
+
+    private fun showPaymentStatusDialog() {
+        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_payment, null)
+        val radioGroup = dialogView.findViewById<RadioGroup>(R.id.radioGroupStatus)
+        val radioPaid = dialogView.findViewById<RadioButton>(R.id.radioPaid)
+        val btnConfirm = dialogView.findViewById<Button>(R.id.btnConfirm)
+        val btnCancel = dialogView.findViewById<Button>(R.id.btnCancel)
+
+        val dialog = AlertDialog.Builder(requireContext())
+            .setView(dialogView)
+            .setCancelable(false)
+            .create()
+
+        radioPaid.isChecked = true
+
+        btnConfirm.setOnClickListener {
+            val selectedStatus = if (radioGroup.checkedRadioButtonId == R.id.radioPending) {
+                "PENDING"
+            } else {
+                "PAID"
+            }
+            salesViewModel.finalizeSaleWithStatus(selectedStatus)
+            dialog.dismiss()
+
+            // ** THE FIX IS HERE: Navigate AFTER confirming the dialog **
+            exitSelectionMode()
+            (requireActivity() as MainActivity).selectSalesTab()
+        }
+
+        btnCancel.setOnClickListener {
+            salesViewModel.salePendingDialogCancelled()
+            dialog.dismiss()
+        }
+
+        dialog.show()
     }
 
     private fun setupCategoryChips() {
@@ -140,9 +189,7 @@ class HomeFragment : Fragment() {
             totalItems,
             saleItems
         )
-
-        exitSelectionMode()
-        (requireActivity() as MainActivity).selectSalesTab()
+        // ** THE FIX IS HERE: Removed navigation from this spot **
     }
 
     private fun addSampleProducts(dbHelper: ProductDbHelper) {

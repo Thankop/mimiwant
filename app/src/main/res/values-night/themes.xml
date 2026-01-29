@@ -1,24 +1,20 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme for night mode. -->
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
     <style name="Base.Theme.Yailek" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <!-- Primary brand color (for toolbar, etc.). -->
-        <item name="colorPrimary">@color/purple_500</item>
-        <item name="colorPrimaryVariant">@color/purple_700</item>
-        <item name="colorOnPrimary">@android:color/white</item>
 
-        <!-- Main background color of the app. -->
-        <item name="android:colorBackground">@color/dark_grey</item>
+        <!-- Night mode ใช้โทนเดียวกับ Day -->
+        <item name="colorPrimary">@color/primary_dark</item>
+        <item name="colorPrimaryVariant">@color/primary_dark_variant</item>
+        <item name="colorOnPrimary">@color/white</item>
 
-        <!-- Color for surfaces like cards, bottom navigation. -->
-        <item name="colorSurface">@color/dark_grey</item>
+        <item name="colorSecondary">@color/accent_brown</item>
+        <item name="colorSecondaryVariant">@color/primary_dark_variant</item>
+        <item name="colorOnSecondary">@color/white</item>
 
-        <!-- Color for text and icons on top of surface/background colors. -->
-        <item name="colorOnSurface">@android:color/white</item>
-        <item name="colorOnBackground">@android:color/white</item>
+        <item name="android:statusBarColor">@color/primary_dark</item>
+        <item name="android:windowBackground">@color/cream_bg</item>
 
-        <!-- Status bar color. -->
-        <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
     </style>
 
-    <style name="Theme.Yailek" parent="Base.Theme.Yailek" />
 </resources>

@@ -1,5 +1,6 @@
 package com.vorragun.yailek.ui.sales
 
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -28,12 +29,22 @@ class SalesSummaryAdapter(
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val record = salesRecords[position]
 
-        // ⭐ ใช้เลขบิลรายวัน ไม่ใช่ id
         holder.billNumberTextView.text = "#${record.dailyNumber}"
-
         holder.timeTextView.text = record.time
         holder.amountTextView.text = String.format("%.2f", record.totalAmount)
         holder.countTextView.text = "${record.itemCount} ชิ้น"
+
+        // Simplified and 100% safe color logic
+        val textColor = if (record.paymentStatus == "PENDING") {
+            Color.RED
+        } else {
+            Color.BLACK // Use a safe, hardcoded color to prevent the crash
+        }
+
+        holder.billNumberTextView.setTextColor(textColor)
+        holder.timeTextView.setTextColor(textColor)
+        holder.amountTextView.setTextColor(textColor)
+        holder.countTextView.setTextColor(textColor)
 
         holder.itemView.setOnClickListener {
             onItemClick(record)

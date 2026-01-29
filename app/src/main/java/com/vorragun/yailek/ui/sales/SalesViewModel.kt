@@ -1,16 +1,12 @@
 package com.vorragun.yailek.ui.sales
 
 import android.app.Application
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import com.vorragun.productmanagement.ProductDbHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.util.*
 
 class SalesViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -28,6 +24,10 @@ class SalesViewModel(application: Application) : AndroidViewModel(application) {
     private val _saleItems = MutableLiveData<List<SaleItem>>()
     val saleItems: LiveData<List<SaleItem>> = _saleItems
 
+    private val _pendingSaleData =
+        MutableLiveData<Pair<SalesRecord, List<SaleItem>>?>()
+    val pendingSaleData: LiveData<Pair<SalesRecord, List<SaleItem>>?> = _pendingSaleData
+
     private var lastSavedToken: String? = null
 
     init {
@@ -35,17 +35,25 @@ class SalesViewModel(application: Application) : AndroidViewModel(application) {
         loadSalesForDate(today)
     }
 
+    // 🔥 ปลอดภัย 100%
     fun loadSalesForDate(date: String) {
-        _selectedDate.value = date
-
-        // 🔥 สำคัญมาก รีเซ็ต token ทุกครั้งที่เปลี่ยนวัน
+        _selectedDate.postValue(date)
         lastSavedToken = null
 
-        val records = dbHelper.getSalesForDate(date)
-        _salesRecords.value = records
-        _dailyTotal.value = records.sumOf { it.totalAmount }
+        viewModelScope.launch(Dispatchers.IO) {
+            val records = dbHelper.getSalesForDate(date)
+
+            // ✅ รวมยอดเฉพาะที่จ่ายแล้ว
+            val totalPaid = records
+                .filter { it.paymentStatus == "PAID" }
+                .sumOf { it.totalAmount }
+
+            _salesRecords.postValue(records)
+            _dailyTotal.postValue(totalPaid)
+        }
     }
 
+    // STEP 1: เตรียมข้อมูล → เปิด dialog
     fun saveSaleIfNeeded(
         saleToken: String,
         totalAmount: Double,
@@ -53,41 +61,59 @@ class SalesViewModel(application: Application) : AndroidViewModel(application) {
         items: List<SaleItem>
     ) {
         if (saleToken == lastSavedToken || totalAmount <= 0) return
+        val date = _selectedDate.value ?: return
 
-        val dateToSave = _selectedDate.value ?: return
-
-        // ❌ ไม่ต้องนับเลขบิลที่นี่
-        // ✅ DB จะคำนวณ daily_number จาก sale_date ให้เอง
         val record = SalesRecord(
             id = 0,
-            date = dateToSave,
-            time = "", // Pass empty time, DB will generate it.
+            date = date,
+            time = "",
             totalAmount = totalAmount,
             itemCount = totalItems,
-            dailyNumber = 0
+            dailyNumber = 0,
+            paymentStatus = ""
         )
 
-        val saleId = dbHelper.addSaleRecordAndReturnId(record)
-        dbHelper.addSaleItems(saleId, items)
-
         lastSavedToken = saleToken
-        loadSalesForDate(dateToSave)
+        _pendingSaleData.postValue(record to items)
     }
 
-    // Old synchronous method - should not be used from UI thread
-    fun getSaleItems(saleId: Int): List<SaleItem> {
-        return dbHelper.getSaleItems(saleId)
+    // STEP 2: กดยืนยันจาก dialog
+    fun finalizeSaleWithStatus(paymentStatus: String) {
+        val pending = _pendingSaleData.value ?: return
+        val record = pending.first.copy(paymentStatus = paymentStatus)
+        val items = pending.second
+
+        viewModelScope.launch(Dispatchers.IO) {
+            val saleId = dbHelper.addSaleRecordAndReturnId(record)
+            dbHelper.addSaleItems(saleId, items)
+            loadSalesForDate(record.date)
+        }
+
+        _pendingSaleData.postValue(null)
+    }
+
+    fun salePendingDialogCancelled() {
+        _pendingSaleData.postValue(null)
+        lastSavedToken = null
     }
 
     fun loadSaleItems(saleId: Int) {
         viewModelScope.launch(Dispatchers.IO) {
-            val items = dbHelper.getSaleItems(saleId)
-            _saleItems.postValue(items)
+            _saleItems.postValue(dbHelper.getSaleItems(saleId))
+        }
+    }
+
+    fun updateSalePaymentStatus(saleId: Int, isPaid: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            dbHelper.updateSalePaymentStatus(saleId, isPaid)
+            _selectedDate.value?.let { loadSalesForDate(it) }
         }
     }
 
     fun deleteSale(saleId: Int, saleDate: String) {
-        dbHelper.deleteSale(saleId)
-        loadSalesForDate(saleDate)
+        viewModelScope.launch(Dispatchers.IO) {
+            dbHelper.deleteSale(saleId)
+            loadSalesForDate(saleDate)
+        }
     }
 }

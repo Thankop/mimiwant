@@ -1,25 +1,30 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.Yailek" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <!-- Primary brand color. -->
-        <item name="colorPrimary">@color/purple_500</item>
-        <item name="colorPrimaryVariant">@color/purple_700</item>
-        <item name="colorOnPrimary">@android:color/white</item>
-        <!-- Secondary brand color. -->
-        <item name="colorSecondary">@color/purple_500</item>
-        <item name="colorSecondaryVariant">@color/purple_700</item>
-        <item name="colorOnSecondary">@android:color/white</item>
-        <!-- Status bar color. -->
-        <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
 
-        <!-- Tells the system that the status bar is dark, so icons should be light. -->
+    <style name="Base.Theme.Yailek" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+
+        <!-- Primary -->
+        <item name="colorPrimary">@color/primary_dark</item>
+        <item name="colorPrimaryVariant">@color/primary_dark_variant</item>
+        <item name="colorOnPrimary">@color/white</item>
+
+        <!-- Secondary -->
+        <item name="colorSecondary">@color/accent_brown</item>
+        <item name="colorSecondaryVariant">@color/primary_dark_variant</item>
+        <item name="colorOnSecondary">@color/white</item>
+
+        <!-- Status bar -->
+        <item name="android:statusBarColor" tools:targetApi="l">@color/primary_dark</item>
         <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
+
+        <!-- Default background -->
+        <item name="android:windowBackground">@color/cream_bg</item>
 
     </style>
 
     <style name="Theme.Yailek" parent="Base.Theme.Yailek" />
 
-    <style name="ShapeAppearance.App.SmallComponent" parent="ShapeAppearance.MaterialComponents.SmallComponent">
+    <style name="ShapeAppearance.App.SmallComponent"
+        parent="ShapeAppearance.MaterialComponents.SmallComponent">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">50%</item>
     </style>

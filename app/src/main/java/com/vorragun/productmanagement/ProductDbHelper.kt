@@ -16,8 +16,7 @@ class ProductDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAM
 
     companion object {
         private const val DATABASE_NAME = "product.db"
-        private const val DATABASE_VERSION = 6 // Incremented version
-
+        private const val DATABASE_VERSION = 7
         private const val TABLE_PRODUCTS = "products"
         private const val COLUMN_ID = "id"
         private const val COLUMN_NAME = "name"
@@ -33,6 +32,9 @@ class ProductDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAM
         private const val COLUMN_SALE_TIME = "sale_time"
         private const val COLUMN_SALE_TOTAL_AMOUNT = "total_amount"
         private const val COLUMN_SALE_ITEM_COUNT = "item_count"
+
+        private const val COLUMN_SALE_PAYMENT_STATUS = "payment_status"
+
 
         private const val TABLE_SALE_ITEMS = "sale_items"
         private const val COLUMN_SALE_ITEM_ID = "id"
@@ -59,7 +61,8 @@ class ProductDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAM
                 "$COLUMN_SALE_DATE TEXT, " +
                 "$COLUMN_SALE_TIME TEXT, " +
                 "$COLUMN_SALE_TOTAL_AMOUNT REAL, " +
-                "$COLUMN_SALE_ITEM_COUNT INTEGER)"
+                "$COLUMN_SALE_ITEM_COUNT INTEGER, " +
+                "$COLUMN_SALE_PAYMENT_STATUS TEXT)"
         db?.execSQL(createSalesTable)
 
         val createSaleItemsTable = "CREATE TABLE $TABLE_SALE_ITEMS (" +
@@ -148,6 +151,7 @@ class ProductDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAM
             put(COLUMN_SALE_TIME, currentTime)
             put(COLUMN_SALE_TOTAL_AMOUNT, record.totalAmount)
             put(COLUMN_SALE_ITEM_COUNT, record.itemCount)
+            put(COLUMN_SALE_PAYMENT_STATUS, record.paymentStatus)
         }
         return db.insert(TABLE_SALES, null, values)
     }
@@ -184,15 +188,38 @@ class ProductDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAM
             null,
             "$COLUMN_SALE_ID ASC"
         ).use { cursor ->
+            // Get column indices once, before the loop
+            val idCol = cursor.getColumnIndex(COLUMN_SALE_ID)
+            val dateCol = cursor.getColumnIndex(COLUMN_SALE_DATE)
+            val timeCol = cursor.getColumnIndex(COLUMN_SALE_TIME)
+            val amountCol = cursor.getColumnIndex(COLUMN_SALE_TOTAL_AMOUNT)
+            val countCol = cursor.getColumnIndex(COLUMN_SALE_ITEM_COUNT)
+            val paymentStatusCol = cursor.getColumnIndex(COLUMN_SALE_PAYMENT_STATUS)
+
+            // Guard against a critically broken schema where essential columns are missing.
+            if (idCol == -1 || amountCol == -1 || countCol == -1) {
+                return emptyList() // Return an empty list if we can't build a record.
+            }
+
             while (cursor.moveToNext()) {
+                // Safely get all values, providing defaults for any potential nulls.
+                val id = cursor.getInt(idCol)
+                val totalAmount = cursor.getDouble(amountCol)
+                val itemCount = cursor.getInt(countCol)
+                
+                val saleDate = if (dateCol == -1 || cursor.isNull(dateCol)) "" else cursor.getString(dateCol)
+                val saleTime = if (timeCol == -1 || cursor.isNull(timeCol)) "" else cursor.getString(timeCol)
+                val paymentStatus = if (paymentStatusCol == -1 || cursor.isNull(paymentStatusCol)) "PAID" else cursor.getString(paymentStatusCol)
+
                 salesList.add(
                     SalesRecord(
-                        id = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_SALE_ID)),
-                        date = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_SALE_DATE)),
-                        time = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_SALE_TIME)),
-                        totalAmount = cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_SALE_TOTAL_AMOUNT)),
-                        itemCount = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_SALE_ITEM_COUNT)),
-                        dailyNumber = dailyCounter
+                        id = id,
+                        date = saleDate,
+                        time = saleTime,
+                        totalAmount = totalAmount,
+                        itemCount = itemCount,
+                        dailyNumber = dailyCounter,
+                        paymentStatus = paymentStatus
                     )
                 )
                 dailyCounter++
@@ -219,6 +246,15 @@ class ProductDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAM
         }
         return list
     }
+
+    fun updateSalePaymentStatus(saleId: Int, isPaid: Boolean) {
+        val status = if (isPaid) "PAID" else "PENDING"
+        val values = ContentValues().apply {
+            put(COLUMN_SALE_PAYMENT_STATUS, status)
+        }
+        db.update(TABLE_SALES, values, "$COLUMN_SALE_ID = ?", arrayOf(saleId.toString()))
+    }
+
 
     fun deleteSale(saleId: Int) {
         db.beginTransaction()
