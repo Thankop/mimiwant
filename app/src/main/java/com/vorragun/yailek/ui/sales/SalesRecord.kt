@@ -7,6 +7,6 @@ data class SalesRecord(
     val totalAmount: Double,
     val itemCount: Int,
     val dailyNumber: Int,
-    val paymentStatus: String // "PAID" หรือ "PENDING"
+    val paymentStatus: String, // "PAID" or "PENDING"
+    val paymentNote: String? = null
 )
-

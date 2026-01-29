@@ -6,10 +6,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.EditText
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
@@ -91,6 +93,8 @@ class HomeFragment : Fragment() {
         val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_payment, null)
         val radioGroup = dialogView.findViewById<RadioGroup>(R.id.radioGroupStatus)
         val radioPaid = dialogView.findViewById<RadioButton>(R.id.radioPaid)
+        val radioPending = dialogView.findViewById<RadioButton>(R.id.radioPending)
+        val noteEditText = dialogView.findViewById<EditText>(R.id.edit_text_note)
         val btnConfirm = dialogView.findViewById<Button>(R.id.btnConfirm)
         val btnCancel = dialogView.findViewById<Button>(R.id.btnCancel)
 
@@ -101,16 +105,17 @@ class HomeFragment : Fragment() {
 
         radioPaid.isChecked = true
 
+        radioGroup.setOnCheckedChangeListener { _, checkedId ->
+            noteEditText.isVisible = checkedId == R.id.radioPending
+        }
+
         btnConfirm.setOnClickListener {
-            val selectedStatus = if (radioGroup.checkedRadioButtonId == R.id.radioPending) {
-                "PENDING"
-            } else {
-                "PAID"
-            }
-            salesViewModel.finalizeSaleWithStatus(selectedStatus)
+            val selectedStatus = if (radioPending.isChecked) "PENDING" else "PAID"
+            val note = if (selectedStatus == "PENDING") noteEditText.text.toString() else null
+            
+            salesViewModel.finalizeSaleWithStatus(selectedStatus, note)
             dialog.dismiss()
 
-            // ** THE FIX IS HERE: Navigate AFTER confirming the dialog **
             exitSelectionMode()
             (requireActivity() as MainActivity).selectSalesTab()
         }
@@ -176,7 +181,7 @@ class HomeFragment : Fragment() {
                         productName = product.name,
                         quantity = quantity,
                         price = product.price,
-                        imageResId = product.imageResId // Pass the imageResId
+                        imageResId = product.imageResId
                     )
                 )
             }
@@ -189,7 +194,6 @@ class HomeFragment : Fragment() {
             totalItems,
             saleItems
         )
-        // ** THE FIX IS HERE: Removed navigation from this spot **
     }
 
     private fun addSampleProducts(dbHelper: ProductDbHelper) {

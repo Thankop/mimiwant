@@ -1,12 +1,16 @@
 package com.vorragun.yailek.ui.sales
 
 import android.app.Application
-import androidx.lifecycle.*
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
 import com.vorragun.productmanagement.ProductDbHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 
 class SalesViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -24,8 +28,7 @@ class SalesViewModel(application: Application) : AndroidViewModel(application) {
     private val _saleItems = MutableLiveData<List<SaleItem>>()
     val saleItems: LiveData<List<SaleItem>> = _saleItems
 
-    private val _pendingSaleData =
-        MutableLiveData<Pair<SalesRecord, List<SaleItem>>?>()
+    private val _pendingSaleData = MutableLiveData<Pair<SalesRecord, List<SaleItem>>?>()
     val pendingSaleData: LiveData<Pair<SalesRecord, List<SaleItem>>?> = _pendingSaleData
 
     private var lastSavedToken: String? = null
@@ -35,15 +38,13 @@ class SalesViewModel(application: Application) : AndroidViewModel(application) {
         loadSalesForDate(today)
     }
 
-    // 🔥 ปลอดภัย 100%
     fun loadSalesForDate(date: String) {
-        _selectedDate.postValue(date)
+        _selectedDate.postValue(date)   // ✅ ปลอดภัยทุก thread
         lastSavedToken = null
 
         viewModelScope.launch(Dispatchers.IO) {
             val records = dbHelper.getSalesForDate(date)
 
-            // ✅ รวมยอดเฉพาะที่จ่ายแล้ว
             val totalPaid = records
                 .filter { it.paymentStatus == "PAID" }
                 .sumOf { it.totalAmount }
@@ -53,7 +54,7 @@ class SalesViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // STEP 1: เตรียมข้อมูล → เปิด dialog
+
     fun saveSaleIfNeeded(
         saleToken: String,
         totalAmount: Double,
@@ -74,13 +75,12 @@ class SalesViewModel(application: Application) : AndroidViewModel(application) {
         )
 
         lastSavedToken = saleToken
-        _pendingSaleData.postValue(record to items)
+        _pendingSaleData.value = record to items
     }
 
-    // STEP 2: กดยืนยันจาก dialog
-    fun finalizeSaleWithStatus(paymentStatus: String) {
+    fun finalizeSaleWithStatus(paymentStatus: String, note: String?) {
         val pending = _pendingSaleData.value ?: return
-        val record = pending.first.copy(paymentStatus = paymentStatus)
+        val record = pending.first.copy(paymentStatus = paymentStatus, paymentNote = note)
         val items = pending.second
 
         viewModelScope.launch(Dispatchers.IO) {
@@ -89,11 +89,11 @@ class SalesViewModel(application: Application) : AndroidViewModel(application) {
             loadSalesForDate(record.date)
         }
 
-        _pendingSaleData.postValue(null)
+        _pendingSaleData.value = null
     }
 
     fun salePendingDialogCancelled() {
-        _pendingSaleData.postValue(null)
+        _pendingSaleData.value = null
         lastSavedToken = null
     }
 
@@ -103,17 +103,15 @@ class SalesViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun updateSalePaymentStatus(saleId: Int, isPaid: Boolean) {
+    fun updateSalePaymentStatus(saleId: Int, isPaid: Boolean, note: String?) {
         viewModelScope.launch(Dispatchers.IO) {
-            dbHelper.updateSalePaymentStatus(saleId, isPaid)
+            dbHelper.updateSalePaymentStatus(saleId, isPaid, note)
             _selectedDate.value?.let { loadSalesForDate(it) }
         }
     }
 
     fun deleteSale(saleId: Int, saleDate: String) {
-        viewModelScope.launch(Dispatchers.IO) {
-            dbHelper.deleteSale(saleId)
-            loadSalesForDate(saleDate)
-        }
+        dbHelper.deleteSale(saleId)
+        loadSalesForDate(saleDate)
     }
 }

@@ -16,7 +16,7 @@ class ProductDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAM
 
     companion object {
         private const val DATABASE_NAME = "product.db"
-        private const val DATABASE_VERSION = 7
+        private const val DATABASE_VERSION = 8 // Incremented DB version
         private const val TABLE_PRODUCTS = "products"
         private const val COLUMN_ID = "id"
         private const val COLUMN_NAME = "name"
@@ -32,9 +32,8 @@ class ProductDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAM
         private const val COLUMN_SALE_TIME = "sale_time"
         private const val COLUMN_SALE_TOTAL_AMOUNT = "total_amount"
         private const val COLUMN_SALE_ITEM_COUNT = "item_count"
-
         private const val COLUMN_SALE_PAYMENT_STATUS = "payment_status"
-
+        private const val COLUMN_SALE_PAYMENT_NOTE = "payment_note" // New column for the note
 
         private const val TABLE_SALE_ITEMS = "sale_items"
         private const val COLUMN_SALE_ITEM_ID = "id"
@@ -62,7 +61,8 @@ class ProductDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAM
                 "$COLUMN_SALE_TIME TEXT, " +
                 "$COLUMN_SALE_TOTAL_AMOUNT REAL, " +
                 "$COLUMN_SALE_ITEM_COUNT INTEGER, " +
-                "$COLUMN_SALE_PAYMENT_STATUS TEXT)"
+                "$COLUMN_SALE_PAYMENT_STATUS TEXT, " +
+                "$COLUMN_SALE_PAYMENT_NOTE TEXT)" // Added new column to creation script
         db?.execSQL(createSalesTable)
 
         val createSaleItemsTable = "CREATE TABLE $TABLE_SALE_ITEMS (" +
@@ -76,10 +76,9 @@ class ProductDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAM
     }
 
     override fun onUpgrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {
-        db?.execSQL("DROP TABLE IF EXISTS $TABLE_PRODUCTS")
-        db?.execSQL("DROP TABLE IF EXISTS $TABLE_SALES")
-        db?.execSQL("DROP TABLE IF EXISTS $TABLE_SALE_ITEMS")
-        onCreate(db)
+        if (oldVersion < 8) {
+            db?.execSQL("ALTER TABLE $TABLE_SALES ADD COLUMN $COLUMN_SALE_PAYMENT_NOTE TEXT")
+        }
     }
 
     // --- Product Functions --- //
@@ -152,6 +151,7 @@ class ProductDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAM
             put(COLUMN_SALE_TOTAL_AMOUNT, record.totalAmount)
             put(COLUMN_SALE_ITEM_COUNT, record.itemCount)
             put(COLUMN_SALE_PAYMENT_STATUS, record.paymentStatus)
+            put(COLUMN_SALE_PAYMENT_NOTE, record.paymentNote)
         }
         return db.insert(TABLE_SALES, null, values)
     }
@@ -188,38 +188,34 @@ class ProductDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAM
             null,
             "$COLUMN_SALE_ID ASC"
         ).use { cursor ->
-            // Get column indices once, before the loop
             val idCol = cursor.getColumnIndex(COLUMN_SALE_ID)
             val dateCol = cursor.getColumnIndex(COLUMN_SALE_DATE)
             val timeCol = cursor.getColumnIndex(COLUMN_SALE_TIME)
             val amountCol = cursor.getColumnIndex(COLUMN_SALE_TOTAL_AMOUNT)
             val countCol = cursor.getColumnIndex(COLUMN_SALE_ITEM_COUNT)
             val paymentStatusCol = cursor.getColumnIndex(COLUMN_SALE_PAYMENT_STATUS)
+            val paymentNoteCol = cursor.getColumnIndex(COLUMN_SALE_PAYMENT_NOTE)
 
-            // Guard against a critically broken schema where essential columns are missing.
             if (idCol == -1 || amountCol == -1 || countCol == -1) {
-                return emptyList() // Return an empty list if we can't build a record.
+                return emptyList()
             }
 
             while (cursor.moveToNext()) {
-                // Safely get all values, providing defaults for any potential nulls.
-                val id = cursor.getInt(idCol)
-                val totalAmount = cursor.getDouble(amountCol)
-                val itemCount = cursor.getInt(countCol)
-                
+                val paymentStatus = if (paymentStatusCol == -1 || cursor.isNull(paymentStatusCol)) "PAID" else cursor.getString(paymentStatusCol)
                 val saleDate = if (dateCol == -1 || cursor.isNull(dateCol)) "" else cursor.getString(dateCol)
                 val saleTime = if (timeCol == -1 || cursor.isNull(timeCol)) "" else cursor.getString(timeCol)
-                val paymentStatus = if (paymentStatusCol == -1 || cursor.isNull(paymentStatusCol)) "PAID" else cursor.getString(paymentStatusCol)
+                val paymentNote = if (paymentNoteCol == -1 || cursor.isNull(paymentNoteCol)) null else cursor.getString(paymentNoteCol)
 
                 salesList.add(
                     SalesRecord(
-                        id = id,
+                        id = cursor.getInt(idCol),
                         date = saleDate,
                         time = saleTime,
-                        totalAmount = totalAmount,
-                        itemCount = itemCount,
+                        totalAmount = cursor.getDouble(amountCol),
+                        itemCount = cursor.getInt(countCol),
                         dailyNumber = dailyCounter,
-                        paymentStatus = paymentStatus
+                        paymentStatus = paymentStatus,
+                        paymentNote = paymentNote
                     )
                 )
                 dailyCounter++
@@ -247,14 +243,18 @@ class ProductDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAM
         return list
     }
 
-    fun updateSalePaymentStatus(saleId: Int, isPaid: Boolean) {
+    fun updateSalePaymentStatus(saleId: Int, isPaid: Boolean, note: String?) {
         val status = if (isPaid) "PAID" else "PENDING"
         val values = ContentValues().apply {
             put(COLUMN_SALE_PAYMENT_STATUS, status)
+            if (status == "PENDING") {
+                put(COLUMN_SALE_PAYMENT_NOTE, note)
+            } else {
+                putNull(COLUMN_SALE_PAYMENT_NOTE) // Clear the note if paid
+            }
         }
         db.update(TABLE_SALES, values, "$COLUMN_SALE_ID = ?", arrayOf(saleId.toString()))
     }
-
 
     fun deleteSale(saleId: Int) {
         db.beginTransaction()
