@@ -2,11 +2,11 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/navigation_home"
-        android:icon="@android:drawable/ic_menu_myplaces"
-        android:title="หน้าหลัก" />
+        android:icon="@drawable/car"
+        android:title="หน้าสินค้า" />
     <item
         android:id="@+id/navigation_sales_summary"
-        android:icon="@android:drawable/ic_dialog_info"
+        android:icon="@drawable/moneynakub"
         android:title="สรุปการขาย" />
 
 </menu>

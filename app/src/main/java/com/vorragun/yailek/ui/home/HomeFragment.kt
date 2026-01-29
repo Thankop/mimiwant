@@ -131,9 +131,12 @@ class HomeFragment : Fragment() {
     private fun setupCategoryChips() {
         binding.categoryChipGroup.setOnCheckedChangeListener { group, checkedId ->
             val selectedCategory = when (checkedId) {
+                R.id.chip_all -> null
                 R.id.chip_drinks -> "เครื่องดื่ม"
+                R.id.chip_beer -> "เบียร์"
                 R.id.chip_snacks -> "ขนม"
-                else -> null // For "All"
+                R.id.chip_others -> "อื่นๆ"
+                else -> null
             }
             loadProducts(selectedCategory)
         }
@@ -203,9 +206,9 @@ class HomeFragment : Fragment() {
             Product(0, "โอริโอ", "", 10.0, 0, R.drawable.oreo, "ขนม"),
             Product(0, "โออิชิ", "", 20.0, 0, R.drawable.oshi, "เครื่องดื่ม"),
             Product(0, "เอลเซ", "", 10.0, 0, R.drawable.ellse, "ขนม"),
-            Product(0, "ลีโอ", "", 62.0, 0, R.drawable.leo, "เครื่องดื่ม"),
-            Product(0, "เบียร์", "", 65.0, 0, R.drawable.singhabeer, "เครื่องดื่ม"),
-            Product(0, "น้ำแข็ง", "", 10.0, 0, R.drawable.ice, "เครื่องดื่ม"),
+            Product(0, "ลีโอ", "", 62.0, 0, R.drawable.leo, "เบียร์"),
+            Product(0, "เบียร์", "", 65.0, 0, R.drawable.singhabeer, "เบียร์"),
+            Product(0, "น้ำแข็ง", "", 10.0, 0, R.drawable.ice, "อื่นๆ"),
             Product(0, "จูปาจุป", "", 2.0, 0, R.drawable.chupachups, "ขนม"),
             Product(0, "โชกี้", "", 2.0, 0, R.drawable.choki, "ขนม"),
             Product(0, "คอนเน่", "", 10.0, 0, R.drawable.conne, "ขนม"),

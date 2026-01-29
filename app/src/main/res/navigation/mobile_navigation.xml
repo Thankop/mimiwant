@@ -8,7 +8,7 @@
     <fragment
         android:id="@+id/navigation_home"
         android:name="com.vorragun.yailek.ui.home.HomeFragment"
-        android:label="หน้าหลัก"
+        android:label="หน้าสินค้า"
         tools:layout="@layout/fragment_home">
 
         <!-- 🔥 action จากหน้าหลัก → สรุปการขาย -->
