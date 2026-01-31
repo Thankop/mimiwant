@@ -202,7 +202,6 @@ class HomeFragment : Fragment() {
     private fun addSampleProducts(dbHelper: ProductDbHelper) {
         val products = listOf(
             Product(0, "เลย์", "", 5.0, 0, R.drawable.lay, "ขนม"),
-            Product(0, "น้ำเปล่า", "", 10.0, 0, R.drawable.water, "เครื่องดื่ม"),
             Product(0, "โอริโอ", "", 10.0, 0, R.drawable.oreo, "ขนม"),
             Product(0, "โออิชิ", "", 20.0, 0, R.drawable.oshi, "เครื่องดื่ม"),
             Product(0, "เอลเซ", "", 10.0, 0, R.drawable.ellse, "ขนม"),
@@ -212,7 +211,15 @@ class HomeFragment : Fragment() {
             Product(0, "จูปาจุป", "", 2.0, 0, R.drawable.chupachups, "ขนม"),
             Product(0, "โชกี้", "", 2.0, 0, R.drawable.choki, "ขนม"),
             Product(0, "คอนเน่", "", 10.0, 0, R.drawable.conne, "ขนม"),
-            Product(0, "มาชิตะ", "", 5.0, 0, R.drawable.mashita, "ขนม")
+            Product(0, "มาชิตะ", "", 5.0, 0, R.drawable.mashita, "ขนม"),
+            Product(0, "ลีโอกระป๋อง", "", 35.0, 0, R.drawable.leokapom, "เบียร์"),
+            Product(0, "อิชิตัน", "", 35.0, 0, R.drawable.icitan, "เครื่องดื่ม"),
+            Product(0, "อิชิตัน รสข้าวญี่ปุ่น", "", 35.0, 0, R.drawable.ichitan, "เครื่องดื่ม"),
+            Product(0, "แป๊ปซี่กระป๋อง", "", 35.0, 0, R.drawable.pepsi, "เครื่องดื่ม"),
+            Product(0, "โค้กกระป๋อง", "", 35.0, 0, R.drawable.cokecan, "เครื่องดื่ม"),
+            Product(0, "น้ำสิงห์ ขวดเล็ก", "", 35.0, 0, R.drawable.watermini, "เครื่องดื่ม"),
+            Product(0, "น้ำสิงห์ ขวดกลาง", "", 10.0, 0, R.drawable.water, "เครื่องดื่ม"),
+            Product(0, "น้ำสิงห์ ขวดใหญ่", "", 35.0, 0, R.drawable.waterbig, "เครื่องดื่ม")
         )
 
         for (product in products) {
