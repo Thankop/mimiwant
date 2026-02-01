@@ -34,7 +34,11 @@ class HomeFragment : Fragment() {
 
     private lateinit var productAdapter: ProductAdapter
     private lateinit var dbHelper: ProductDbHelper
-    private var allProducts = listOf<Product>()
+
+    // This list is for display and will be filtered
+    private var displayedProducts = listOf<Product>()
+    // This is the master list of all products, never filtered. For checkout logic.
+    private var masterProductList = listOf<Product>()
 
     private lateinit var salesViewModel: SalesViewModel
     private var isInSelectionMode = false
@@ -53,9 +57,11 @@ class HomeFragment : Fragment() {
         if (dbHelper.getAllProducts().isEmpty()) {
             addSampleProducts(dbHelper)
         }
-        allProducts = dbHelper.getAllProducts()
+        // Populate both lists
+        masterProductList = dbHelper.getAllProducts()
+        displayedProducts = masterProductList
 
-        productAdapter = ProductAdapter(allProducts)
+        productAdapter = ProductAdapter(displayedProducts)
         binding.productsRecyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
         binding.productsRecyclerView.adapter = productAdapter
 
@@ -112,7 +118,7 @@ class HomeFragment : Fragment() {
         btnConfirm.setOnClickListener {
             val selectedStatus = if (radioPending.isChecked) "PENDING" else "PAID"
             val note = if (selectedStatus == "PENDING") noteEditText.text.toString() else null
-            
+
             salesViewModel.finalizeSaleWithStatus(selectedStatus, note)
             dialog.dismiss()
 
@@ -143,12 +149,12 @@ class HomeFragment : Fragment() {
     }
 
     private fun loadProducts(category: String?) {
-        allProducts = if (category == null) {
-            dbHelper.getAllProducts()
+        displayedProducts = if (category == null) {
+            masterProductList
         } else {
-            dbHelper.getProductsByCategory(category)
+            masterProductList.filter { it.category == category }
         }
-        productAdapter.updateProducts(allProducts)
+        productAdapter.updateProducts(displayedProducts)
     }
 
     private fun enterSelectionMode() {
@@ -175,7 +181,8 @@ class HomeFragment : Fragment() {
         val saleItems = mutableListOf<SaleItem>()
 
         for ((productId, quantity) in selectedProducts) {
-            val product = allProducts.find { it.id == productId }
+            // THE FIX: Look in the master list, not the filtered display list.
+            val product = masterProductList.find { it.id == productId }
             if (product != null) {
                 totalAmount += product.price * quantity
                 totalItems += quantity
@@ -202,11 +209,16 @@ class HomeFragment : Fragment() {
     private fun addSampleProducts(dbHelper: ProductDbHelper) {
         val products = listOf(
             Product(0, "เลย์", "", 5.0, 0, R.drawable.lay, "ขนม"),
+            Product(0, "เลย์ รสบาร์บีคิว", "", 5.0, 0, R.drawable.laybbq, "ขนม"),
+            Product(0, "เลย์ รสโนริสาหร่าย", "", 5.0, 0, R.drawable.laynoeri, "ขนม"),
+            Product(0, "เลย์ รสหมึกย่าง", "", 5.0, 0, R.drawable.layopic, "ขนม"),
             Product(0, "โอริโอ", "", 10.0, 0, R.drawable.oreo, "ขนม"),
             Product(0, "โออิชิ", "", 20.0, 0, R.drawable.oshi, "เครื่องดื่ม"),
             Product(0, "เอลเซ", "", 10.0, 0, R.drawable.ellse, "ขนม"),
             Product(0, "ลีโอ", "", 62.0, 0, R.drawable.leo, "เบียร์"),
             Product(0, "เบียร์", "", 65.0, 0, R.drawable.singhabeer, "เบียร์"),
+            Product(0, "เบียร์", "", 65.0, 0, R.drawable.singkapom, "เบียร์"),
+            Product(0, "เบียร์", "", 65.0, 0, R.drawable.snowy, "เบียร์"),
             Product(0, "น้ำแข็ง", "", 10.0, 0, R.drawable.ice, "อื่นๆ"),
             Product(0, "จูปาจุป", "", 2.0, 0, R.drawable.chupachups, "ขนม"),
             Product(0, "โชกี้", "", 2.0, 0, R.drawable.choki, "ขนม"),
@@ -218,8 +230,8 @@ class HomeFragment : Fragment() {
             Product(0, "แป๊ปซี่กระป๋อง", "", 35.0, 0, R.drawable.pepsi, "เครื่องดื่ม"),
             Product(0, "โค้กกระป๋อง", "", 35.0, 0, R.drawable.cokecan, "เครื่องดื่ม"),
             Product(0, "น้ำสิงห์ ขวดเล็ก", "", 35.0, 0, R.drawable.watermini, "เครื่องดื่ม"),
-            Product(0, "น้ำสิงห์ ขวดกลาง", "", 10.0, 0, R.drawable.water, "เครื่องดื่ม"),
-            Product(0, "น้ำสิงห์ ขวดใหญ่", "", 35.0, 0, R.drawable.waterbig, "เครื่องดื่ม")
+            Product(0, "น้ำสิงห์ ขวดกลาง", "", 10.0, 0, R.drawable.watermid, "เครื่องดื่ม"),
+            Product(0, "น้ำสิงห์ ขวดใหญ่", "", 35.0, 0, R.drawable.water, "เครื่องดื่ม")
         )
 
         for (product in products) {
@@ -229,9 +241,19 @@ class HomeFragment : Fragment() {
 
     private fun filterProducts(query: String?) {
         val list = if (query.isNullOrEmpty()) {
-            allProducts
+            // When search is cleared, show products of the current category
+            val selectedChipId = binding.categoryChipGroup.checkedChipId
+            val selectedCategory = when (selectedChipId) {
+                R.id.chip_all -> null
+                R.id.chip_drinks -> "เครื่องดื่ม"
+                R.id.chip_beer -> "เบียร์"
+                R.id.chip_snacks -> "ขนม"
+                R.id.chip_others -> "อื่นๆ"
+                else -> null
+            }
+            if (selectedCategory == null) masterProductList else masterProductList.filter { it.category == selectedCategory }
         } else {
-            allProducts.filter { it.name.contains(query, true) }
+            displayedProducts.filter { it.name.contains(query, true) }
         }
         productAdapter.updateProducts(list)
     }
