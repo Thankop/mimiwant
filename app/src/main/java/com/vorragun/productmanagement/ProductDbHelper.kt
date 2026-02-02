@@ -16,7 +16,7 @@ class ProductDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAM
 
     companion object {
         private const val DATABASE_NAME = "product.db"
-        private const val DATABASE_VERSION = 8 // Incremented DB version
+        private const val DATABASE_VERSION = 9 // Incremented DB version
         private const val TABLE_PRODUCTS = "products"
         private const val COLUMN_ID = "id"
         private const val COLUMN_NAME = "name"
@@ -77,7 +77,12 @@ class ProductDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAM
 
     override fun onUpgrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {
         if (oldVersion < 8) {
+            // For users coming from a version before 8, add the payment_note column
             db?.execSQL("ALTER TABLE $TABLE_SALES ADD COLUMN $COLUMN_SALE_PAYMENT_NOTE TEXT")
+        }
+        if (oldVersion < 9) {
+            // For users on version 8 (who are missing payment_status), add it.
+            db?.execSQL("ALTER TABLE $TABLE_SALES ADD COLUMN $COLUMN_SALE_PAYMENT_STATUS TEXT")
         }
     }
 
@@ -92,6 +97,21 @@ class ProductDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAM
             put(COLUMN_CATEGORY, product.category)
         }
         return db.insert(TABLE_PRODUCTS, null, values)
+    }
+
+    fun recreateSampleProducts(products: List<Product>) {
+        db.beginTransaction()
+        try {
+            // Clear the existing products
+            db.delete(TABLE_PRODUCTS, null, null)
+            // Add the new sample products
+            for (product in products) {
+                addProduct(product)
+            }
+            db.setTransactionSuccessful()
+        } finally {
+            db.endTransaction()
+        }
     }
 
     fun getAllProducts(): List<Product> {

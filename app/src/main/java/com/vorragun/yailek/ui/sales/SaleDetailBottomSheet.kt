@@ -45,6 +45,7 @@ class SaleDetailBottomSheet : BottomSheetDialogFragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = BottomSheetSaleDetailBinding.inflate(inflater, container, false)
+        requireContext().deleteDatabase("products.db")
         return binding.root
     }
 

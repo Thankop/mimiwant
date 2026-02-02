@@ -54,9 +54,9 @@ class HomeFragment : Fragment() {
         salesViewModel = ViewModelProvider(requireActivity(), factory).get(SalesViewModel::class.java)
 
         dbHelper = ProductDbHelper(requireContext())
-        if (dbHelper.getAllProducts().isEmpty()) {
-            addSampleProducts(dbHelper)
-        }
+        // Always recreate the sample products for easier development
+        addSampleProducts(dbHelper)
+
         // Populate both lists
         masterProductList = dbHelper.getAllProducts()
         displayedProducts = masterProductList
@@ -208,35 +208,33 @@ class HomeFragment : Fragment() {
 
     private fun addSampleProducts(dbHelper: ProductDbHelper) {
         val products = listOf(
-            Product(0, "เลย์", "", 5.0, 0, R.drawable.lay, "ขนม"),
-            Product(0, "เลย์ รสบาร์บีคิว", "", 5.0, 0, R.drawable.laybbq, "ขนม"),
-            Product(0, "เลย์ รสโนริสาหร่าย", "", 5.0, 0, R.drawable.laynoeri, "ขนม"),
-            Product(0, "เลย์ รสหมึกย่าง", "", 5.0, 0, R.drawable.layopic, "ขนม"),
+            Product(0, "เลย์", "", 20.0, 0, R.drawable.lay, "ขนม"),
+            Product(0, "เลย์ รสบาร์บีคิว", "", 20.0, 0, R.drawable.laybbq, "ขนม"),
+            Product(0, "เลย์ รสโนริสาหร่าย", "", 20.0, 0, R.drawable.laynoeri, "ขนม"),
+            Product(0, "เลย์ รสหมึกย่าง", "", 20.0, 0, R.drawable.layopic, "ขนม"),
             Product(0, "โอริโอ", "", 10.0, 0, R.drawable.oreo, "ขนม"),
             Product(0, "โออิชิ", "", 20.0, 0, R.drawable.oshi, "เครื่องดื่ม"),
             Product(0, "เอลเซ", "", 10.0, 0, R.drawable.ellse, "ขนม"),
             Product(0, "ลีโอ", "", 62.0, 0, R.drawable.leo, "เบียร์"),
-            Product(0, "เบียร์", "", 65.0, 0, R.drawable.singhabeer, "เบียร์"),
-            Product(0, "เบียร์", "", 65.0, 0, R.drawable.singkapom, "เบียร์"),
-            Product(0, "เบียร์", "", 65.0, 0, R.drawable.snowy, "เบียร์"),
+            Product(0, "เบียร์สิงห์", "", 65.0, 0, R.drawable.singhabeer, "เบียร์"),
+            Product(0, "สิงห์กระป๋อง", "", 45.0, 0, R.drawable.singkapom, "เบียร์"),
+            Product(0, "สโนวี่", "", 65.0, 0, R.drawable.snowy, "เบียร์"),
             Product(0, "น้ำแข็ง", "", 10.0, 0, R.drawable.ice, "อื่นๆ"),
-            Product(0, "จูปาจุป", "", 2.0, 0, R.drawable.chupachups, "ขนม"),
-            Product(0, "โชกี้", "", 2.0, 0, R.drawable.choki, "ขนม"),
-            Product(0, "คอนเน่", "", 10.0, 0, R.drawable.conne, "ขนม"),
-            Product(0, "มาชิตะ", "", 5.0, 0, R.drawable.mashita, "ขนม"),
+            Product(0, "จูปาจุป", "", 5.0, 0, R.drawable.chupachups, "ขนม"),
+            Product(0, "โชกี้", "", 5.0, 0, R.drawable.choki, "ขนม"),
+            Product(0, "คอนเน่", "", 20.0, 0, R.drawable.conne, "ขนม"),
+            Product(0, "มาชิตะ", "", 20.0, 0, R.drawable.mashita, "ขนม"),
             Product(0, "ลีโอกระป๋อง", "", 35.0, 0, R.drawable.leokapom, "เบียร์"),
-            Product(0, "อิชิตัน", "", 35.0, 0, R.drawable.icitan, "เครื่องดื่ม"),
-            Product(0, "อิชิตัน รสข้าวญี่ปุ่น", "", 35.0, 0, R.drawable.ichitan, "เครื่องดื่ม"),
-            Product(0, "แป๊ปซี่กระป๋อง", "", 35.0, 0, R.drawable.pepsi, "เครื่องดื่ม"),
-            Product(0, "โค้กกระป๋อง", "", 35.0, 0, R.drawable.cokecan, "เครื่องดื่ม"),
-            Product(0, "น้ำสิงห์ ขวดเล็ก", "", 35.0, 0, R.drawable.watermini, "เครื่องดื่ม"),
-            Product(0, "น้ำสิงห์ ขวดกลาง", "", 10.0, 0, R.drawable.watermid, "เครื่องดื่ม"),
-            Product(0, "น้ำสิงห์ ขวดใหญ่", "", 35.0, 0, R.drawable.water, "เครื่องดื่ม")
+            Product(0, "อิชิตัน", "", 20.0, 0, R.drawable.icitan, "เครื่องดื่ม"),
+            Product(0, "อิชิตัน รสข้าวญี่ปุ่น", "", 20.0, 0, R.drawable.ichitan, "เครื่องดื่ม"),
+            Product(0, "แป๊ปซี่กระป๋อง", "", 15.0, 0, R.drawable.pepsi, "เครื่องดื่ม"),
+            Product(0, "โค้กกระป๋อง", "", 15.0, 0, R.drawable.cokecan, "เครื่องดื่ม"),
+            Product(0, "น้ำสิงห์ ขวดเล็ก", "", 10.0, 0, R.drawable.watermini, "เครื่องดื่ม"),
+            Product(0, "น้ำสิงห์ ขวดกลาง", "", 15.0, 0, R.drawable.watermid, "เครื่องดื่ม"),
+            Product(0, "น้ำสิงห์ ขวดใหญ่", "", 20.0, 0, R.drawable.water, "เครื่องดื่ม")
         )
 
-        for (product in products) {
-            dbHelper.addProduct(product)
-        }
+        dbHelper.recreateSampleProducts(products)
     }
 
     private fun filterProducts(query: String?) {
